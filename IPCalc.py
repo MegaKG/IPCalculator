@@ -1,10 +1,158 @@
 #!/usr/bin/env python3
 import tkinter as tk
 import time
+import re
+
+def checkint(INSTR):
+    if len(INSTR) == 0:
+        return False
+    
+    ch = set('1234567890')
+    for i in INSTR:
+        if i not in ch:
+            return False
+    return True
+
+def checkIP(INSTR):
+    SP = INSTR.split('.')
+    if len(SP) == 4:
+        for i in SP:
+            if not checkint(i):
+                return False
+            else:
+                if (int(i) > 255):
+                    return False
+        return True
+
+    return False
+
+def checkShortNM(IN):
+    if len(IN) > 0:
+        if IN[0] == '/':
+            if checkint(IN[1:]):
+                if int(IN[1:]) <= 32:
+                    return True
+
+    return False
+
+def shortToBits(NM):
+    Value = int(NM[1:])
+
+    Out = ''
+    for i in range(Value):
+        Out += '1'
+    
+    for i in range(32-Value):
+        Out += '0'
+
+    #print(Out)
+
+    IntArray = []
+    for i in range(0,(4*8)-7,8):
+        IntArray.append(int(Out[i:i+8],2))
+    return IntArray
+
+
+
+def longToBits(NM):
+    Out = []
+
+    for i in NM.split('.'):
+        Out.append(int(i))
+    return Out
+
+
+def extendBinary(IN):
+    while len(IN) != 8:
+        IN = '0' + IN
+    return IN
+
+def arrToBinary(ARRIN):
+    Out = ''
+
+    for i in ARRIN:
+        Out += extendBinary(bin(i)[2:10])
+        Out += '.'
+
+    Out = Out[:-1]
+    
+    return Out
+
+def arrToIP(ARRIN):
+    Out = ''
+
+    for i in ARRIN:
+        Out += str(i)
+        Out += '.'
+
+    Out = Out[:-1]
+    
+    return Out
+
+
+def countInstances(IN,I='1'):
+    count = 0
+    for i in IN:
+        if i == I:
+            count += 1
+    return count
+    
+
 
 class application:
     def calculate(self):
-        pass
+        IP_IN = self.IPVar.get()
+        NM_IN = self.NetVar.get()
+
+        if checkIP(IP_IN) and (checkIP(NM_IN) or checkShortNM(NM_IN)):
+            IP = longToBits(IP_IN)
+
+            if checkIP(NM_IN):
+                NETMASK = longToBits(NM_IN)
+            else:
+                NETMASK = shortToBits(NM_IN)
+
+            self.AddrDVar.set(arrToIP(IP));self.AddrDVarB.set(arrToBinary(IP))
+            self.NetmDVar.set(arrToIP(NETMASK) + " = /" + str(countInstances(arrToBinary(NETMASK),'1')));self.NetmDVarB.set(arrToBinary(NETMASK))
+
+            WildCard = []
+            for i in NETMASK:
+                WildCard.append(255-i)
+            self.WildDVar.set(arrToIP(WildCard));self.WildDVarB.set(arrToBinary(WildCard))
+
+            Network = []
+            for i in range(4):
+                Network.append(IP[i]&NETMASK[i])
+            self.NetwDVar.set(arrToIP(Network));self.NetwDVarB.set(arrToBinary(Network))
+
+            Broadcast = []
+            for i in range(4):
+                Broadcast.append(IP[i]|WildCard[i])
+            #print(Broadcast)
+            self.BroaDVar.set(arrToIP(Broadcast));self.BroaDVarB.set(arrToBinary(Broadcast))
+
+            MinH = []
+            for i in Network:
+                MinH.append(i)
+            MinH[-1] += 1
+            self.HMinDVar.set(arrToIP(MinH));self.HMinDVarB.set(arrToBinary(MinH))
+
+            MaxH = []
+            for i in Broadcast:
+                MaxH.append(i)
+            MaxH[-1] -= 1
+            self.HMaxDVar.set(arrToIP(MaxH));self.HMaxDVarB.set(arrToBinary(MaxH))
+
+            HCount = (2 ** (32 - countInstances(arrToBinary(NETMASK)))) - 2
+            self.HNumDVar.set(str(HCount))
+
+
+
+
+
+
+
+
 
     def quit(self):
         self.Run = False
