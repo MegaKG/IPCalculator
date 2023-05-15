@@ -2,6 +2,7 @@
 import tkinter as tk
 import time
 import re
+from tkinter import messagebox
 
 def checkint(INSTR):
     if len(INSTR) == 0:
@@ -145,6 +146,11 @@ class application:
 
             HCount = (2 ** (32 - countInstances(arrToBinary(NETMASK)))) - 2
             self.HNumDVar.set(str(HCount))
+        else:
+            if not checkIP(IP_IN):
+                messagebox.showerror("Error", "Please Enter a valid IP")
+            if (not checkShortNM(NM_IN)) and (not checkIP(NM_IN)):
+                messagebox.showerror("Error", "Please Enter a valid Netmask")
 
 
 
